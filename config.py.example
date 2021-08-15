@@ -1,0 +1,2 @@
+class BotConfig:
+    token = "1234567890:ABCD_abcdefghijklmnopqrstuvwxyz1234"
