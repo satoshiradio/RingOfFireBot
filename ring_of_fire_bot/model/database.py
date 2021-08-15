@@ -12,7 +12,7 @@ class Database:
     db_engine = None
     session: sessionmaker = None
 
-    def __init__(self, db_uri):
+    def __init__(self, db_uri: str):
         self.db_engine = create_engine(db_uri, echo=True)
         Base.metadata.create_all(self.db_engine)
         self.connection = self.db_engine.connect()
