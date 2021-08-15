@@ -3,7 +3,6 @@ from telegram.ext import Updater
 import config
 from ring_of_fire_bot.controller.bot_controller import BotController
 from ring_of_fire_bot.model.database import Database
-from ring_of_fire_bot.model.ring import Ring
 from ring_of_fire_bot.repository.ring_repository import RingRepository
 from ring_of_fire_bot.view.message_sender import MessageSender
 
