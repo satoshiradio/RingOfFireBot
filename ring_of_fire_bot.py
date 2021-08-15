@@ -11,7 +11,7 @@ class RingOfFire:
     def __init__(self, dispatcher):
         self.database = Database(config.DbConfig.SQLALCHEMY_DATABASE_URI)
         self.ring_repository = RingRepository(self.database)
-        self.test = BotController(dispatcher=dispatcher)
+        self.botController = BotController(dispatcher=dispatcher)
 
 
 def main():
