@@ -16,7 +16,7 @@ class RingOfFire:
         self.updater = updater
         self.message_sender = MessageSender(self.updater)
         self.dispatcher = self.updater.dispatcher
-        self.bot_controller = BotController(updater=self.updater, message_sender=self.message_sender)
+        self.bot_controller = BotController(self.updater, self.ring_repository)
 
 
 def main():
