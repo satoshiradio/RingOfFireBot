@@ -1,2 +1,4 @@
 class BotConfig:
     TOKEN = "1234567890:ABCD_abcdefghijklmnopqrstuvwxyz1234"
+class DbConfig:
+    SQLALCHEMY_DATABASE_URI = 'mariadb+mariadbconnector://username:password@host:3306/databaseName'
