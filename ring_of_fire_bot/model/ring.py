@@ -8,5 +8,5 @@ class Ring(Base):
     ring_id = Column(Integer, primary_key=True)
     status = Column(Integer, default=0)
 
-    def __init__(self, status=0):
+    def __init__(self, status=STATUS.WAITING_ON_PARTICIPANTS):
         self.status = status
