@@ -1,6 +1,7 @@
 from typing import Generic, TypeVar, Type
 
 from sqlalchemy.exc import NoResultFound
+from sqlalchemy.orm import Session
 
 from ring_of_fire_bot.model.database import Base
 
@@ -10,12 +11,12 @@ ModelType = TypeVar("ModelType", bound=Base)
 class Repository(Generic[ModelType]):
     Model: Type[ModelType] = None
 
-    def __init__(self, database):
+    def __init__(self, session):
         if self.Model is None:
             raise Exception(
                 self, "model", "This should be set to a Model class.",
             )
-        self._session = database.session()
+        self._session: Session = session
         self.query = self._new_query()
         self.offset = None
         self.size = None
