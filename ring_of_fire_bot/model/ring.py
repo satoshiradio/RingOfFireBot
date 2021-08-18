@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer
 
 from ring_of_fire_bot.model.database import Base
+from ring_of_fire_bot.model.ring_status import STATUS
 
 
 class Ring(Base):
