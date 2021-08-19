@@ -1,9 +1,14 @@
 from enum import Enum
 
 
-class STATUS(Enum):
-    WAITING_ON_PARTICIPANTS = 0
-    OPENING_CHANNELS = 1
-    BALANCING = 2
-    FINISHED = 3
+class ExtendedEnum(Enum):
+    @classmethod
+    def list(cls):
+        return list(map(lambda c: c, cls))
 
+
+class STATUS(ExtendedEnum):
+    WAITING_ON_PARTICIPANTS = "Waiting on participants to join"
+    OPENING_CHANNELS = "Opening channels"
+    BALANCING = "Balancing channels"
+    FINISHED = "Ring is finished"

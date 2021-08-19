@@ -46,7 +46,10 @@ class BotController:
             CommandHandler("register", self.user_controller.register),
             CommandHandler("update_username", self.user_controller.update_username),
             CommandHandler("new_ring", self.ring_controller.new_ring),
-            CommandHandler("my_rings", self.ring_controller.list_rings_of_sender)
+            CommandHandler("my_rings_as_manager", self.ring_controller.list_rings_of_sender),
+            CommandHandler("ring_info", self.ring_controller.get_ring_info),
+            CommandHandler("join", self.ring_controller.join_ring),
+            CommandHandler("ring_status", self.ring_controller.set_ring_status_command),
         ],
             states={}, fallbacks=[], allow_reentry=True)
         self.dispatcher.add_handler(conversation_handler)
