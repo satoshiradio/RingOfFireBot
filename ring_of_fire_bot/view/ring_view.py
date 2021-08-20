@@ -1,3 +1,5 @@
+import json
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
 from telegram.ext import Updater
 from telegram.utils.helpers import mention_html
@@ -40,14 +42,24 @@ class RingView:
             self.message_sender.send_warning(chat_id, "You are not a ring manager of an active ring of fire")
             return
         keyboard = []
+
         for ring in rings:
-            keyboard.append([InlineKeyboardButton(str(ring.ring_id), callback_data=f'ring_detail_{ring.ring_id}')])
+            json_data = {'controller': 'ring',
+                         'function': 'detail',
+                         'ring_id': ring.ring_id
+                         }
+            keyboard.append([InlineKeyboardButton(str(ring.ring_id), callback_data=json.dumps(json_data))])
         self.message_sender.send_message(chat_id, self.rings_of_ring_manager_text,
                                          keyboard=InlineKeyboardMarkup(keyboard))
 
     def set_status(self, chat_id, ring_id):
         keyboard = []
         for status in STATUS.list():
+            json_data = {'controller': 'ring',
+                         'function': 'set_status',
+                         'ring_id': ring_id,
+                         'status': status.split('.', 1)[1]
+                         }
             keyboard.append([InlineKeyboardButton(str(status.value),
-                                                  callback_data=f'ring_status_{ring_id}_status_{status}')])
+                                                  callback_data=json.dumps(json_data))])
         self.message_sender.send_message(chat_id, "Set status of the ring to:", keyboard=InlineKeyboardMarkup(keyboard))

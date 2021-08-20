@@ -1,3 +1,5 @@
+import json
+
 from sqlalchemy.exc import NoResultFound
 from telegram import Update, ParseMode
 from telegram.ext import CallbackContext, Updater
@@ -23,7 +25,7 @@ class RingController:
         self.error_view: ErrorView = ErrorView(self.updater)
 
     def ring_callbacks(self, update: Update, context: CallbackContext):
-        callback_function = update.callback_query.data.split('_')[1]
+        callback_function = json.loads(update.callback_query.data)['function']
         if callback_function == 'detail':
             self.ring_detail_update(update, context)
             return
@@ -50,15 +52,14 @@ class RingController:
         self.ring_view.set_status(update.effective_chat.id, ring_id)
 
     def set_ring_status_callback(self, update, context):
-        ring_id = update.callback_query.data.split('_', 3)[2]
+        json_data = json.loads(update.callback_query.data)
+        ring_id = json_data['ring_id']
         ring = self.ring_repository.get(ring_id)
         # check if ring manager
         if ring.ring_manager_id != update.callback_query.from_user.id:
             self.error_view.message_sender.send_warning("Only the ring manager can set the status!")
-        # update.callback_query.data formatting:  ring_status_{ring_id}_status_{status}
 
-        status_name = update.callback_query.data.split('_', 4)[4]
-        status = STATUS[status_name.split('.', 1)[1]]
+        status = STATUS[json_data['status']]
         self.ring_repository.update_ring_status(ring_id, status)
         update.callback_query.edit_message_text(f"Set ring status to {status.value}", parse_mode=ParseMode.HTML)
 
@@ -77,7 +78,8 @@ class RingController:
         self.ring_repository.add_member_to_ring(ring_id, user)
 
     def ring_detail_update(self, update, context: CallbackContext):
-        ring_id = update.callback_query.data.split('_')[2]
+        json_data = json.loads(update.callback_query.data)
+        ring_id = json_data['ring_id']
         ring = self.ring_repository.get(ring_id)
         message = detail_ring(ring)
         print(message[1])

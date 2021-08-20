@@ -1,13 +1,13 @@
+import json
+
 from telegram import Update
 from telegram.ext import ConversationHandler, CommandHandler, CallbackContext, CallbackQueryHandler, Updater
 
 from ring_of_fire_bot.controller.ring_controller import RingController
 from ring_of_fire_bot.controller.user_controller import UserController
-from ring_of_fire_bot.model.ring import Ring
 from ring_of_fire_bot.repository.ring_repository import RingRepository
 from ring_of_fire_bot.repository.user_repository import UserRepository
 from ring_of_fire_bot.view.error_view import ErrorView
-from ring_of_fire_bot.view.ring_view import RingView
 from ring_of_fire_bot.view.welcome_view import WelcomeView
 
 
@@ -16,7 +16,6 @@ class BotController:
         self.updater = updater
         self.dispatcher = self.updater.dispatcher
 
-        self.dispatcher.add_handler(CallbackQueryHandler(self.__process_callbacks))
         # repositories
         self.ring_repository = ring_repository
         self.user_repository = user_repository
@@ -29,6 +28,7 @@ class BotController:
 
         # handlers
         self.__process_handlers()
+        self.dispatcher.add_handler(CallbackQueryHandler(self.__process_callbacks))
 
     def welcome_message(self, update: Update, context: CallbackContext):
         self.welcome_view.send_welcome_message(update.effective_chat.id)
@@ -36,8 +36,7 @@ class BotController:
     def __process_callbacks(self, update: Update, context: CallbackContext) -> None:
         query = update.callback_query
         query.answer()
-        callback_controller = update.callback_query.data.split('_')[0]
-        if callback_controller == 'ring':
+        if json.loads(update.callback_query.data)['controller'] == 'ring':
             self.ring_controller.ring_callbacks(update, context)
 
     def __process_handlers(self):
