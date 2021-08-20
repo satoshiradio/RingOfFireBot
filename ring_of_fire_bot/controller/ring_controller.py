@@ -20,9 +20,6 @@ class RingController:
         self.ring_view: RingView = RingView(self.updater)
         self.error_view: ErrorView = ErrorView(self.updater)
 
-    def must_be_manager(self):
-        pass
-
     def get_commands(self):
         return ConversationHandler(entry_points=[
             CommandHandler("new_ring", self.new_ring),
@@ -58,15 +55,26 @@ class RingController:
         # get user
         try:
             user = self.user_repository.get(update.effective_user.id)
-            ring_name = update.message.text.split(' ', 1)[1]
-            ring = Ring(user, ring_name=ring_name)
-            self.ring_repository.add(ring)
-            self.ring_view.init_new_ring(update.effective_chat.id)
         except NoResultFound:
             self.error_view.message_sender.send_warning(update.effective_chat.id, "Please /register")
+            return
+        split_text = update.message.text.split(' ', 1)
+        if len(split_text) < 2:
+            self.error_view.message_sender.send_warning("Please provide a ring name!")
+            return
+        ring_name = split_text[1]
+        ring = Ring(user, ring_name=ring_name)
+        self.ring_repository.add(ring)
+        self.ring_view.init_new_ring(update.effective_chat.id)
 
     def set_ring_status_command(self, update: Update, context: CallbackContext):
-        ring_id = update.message.text.split(' ', 1)[1]
+        ring_id = int(update.message.text.split(' ', 1)[1])
+        ring = self.find_ring(ring_id, update.effective_chat.id)
+        if not ring:
+            return
+        if ring.ring_manager_id != update.effective_user.id:
+            self.error_view.message_sender.send_warning(update.effective_chat.id, "Only the ring manager can set the "
+                                                                                  "Status")
         self.ring_view.set_status(update.effective_chat.id, ring_id)
 
     def set_ring_status_callback(self, update, context):
