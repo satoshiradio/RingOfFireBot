@@ -10,5 +10,5 @@ class UserRepository(Repository[User]):
 
     def update_username(self, entity_id, username: str):
         user = self.get(entity_id)
-        user.user_username = username
+        user.set_username(username)
         self._session.commit()

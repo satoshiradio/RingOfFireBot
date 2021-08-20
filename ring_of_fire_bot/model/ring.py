@@ -30,3 +30,16 @@ class Ring(Base):
         self.status = status
         self.ring_members.append(ring_manager)
         self.ring_name = ring_name
+
+    def set_status(self, status: STATUS):
+        self.status = status
+
+    def set_channel_size(self, channel_size: int):
+        self.channel_size = channel_size
+
+    def set_max_ring_members(self, max_ring_members: int):
+        self.max_ring_members = max_ring_members
+
+    def add_member(self, member: User):
+        self.ring_members.append(member)
+

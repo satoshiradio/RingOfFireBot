@@ -15,12 +15,22 @@ class RingRepository(Repository[Ring]):
             .filter(Ring.status != STATUS.FINISHED.value) \
             .all()
 
-    def add_member_to_ring(self, ring_id, user: User):
-        ring = self.get(ring_id)
-        ring.ring_members.append(user)
-        self._session.commit()
-
     def update_ring_status(self, ring_id, status: STATUS):
         ring = self.get(ring_id)
-        ring.status = status
+        ring.set_status(status)
+        self._session.commit()
+
+    def set_channel_size(self, ring_id, channel_size: int):
+        ring = self.get(ring_id)
+        ring.set_channel_size(channel_size)
+        self._session.commit()
+
+    def set_max_members(self, ring_id: int, max_members: int):
+        ring = self.get(ring_id)
+        ring.set_max_ring_members(max_members)
+        self._session.commit()
+
+    def add_member_to_ring(self, ring_id, user: User):
+        ring = self.get(ring_id)
+        ring.add_member(user)
         self._session.commit()
