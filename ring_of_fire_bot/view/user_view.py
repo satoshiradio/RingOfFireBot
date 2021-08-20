@@ -18,5 +18,5 @@ class UserView:
         self.message_sender.send_message(chat_id, self.registered_text)
 
     def updated_username(self, chat_id, username):
-        self.message_sender.send_message(chat_id, self.updated_username_text.format(username))
+        self.message_sender.send_message(chat_id, f"Your username was updated to {username}")
 

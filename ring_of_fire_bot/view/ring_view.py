@@ -1,6 +1,6 @@
 import json
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater
 from telegram.utils.helpers import mention_html
 

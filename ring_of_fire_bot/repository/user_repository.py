@@ -1,5 +1,4 @@
 from ring_of_fire_bot.model.user import User
-from ring_of_fire_bot.model.ring_status import STATUS
 from ring_of_fire_bot.repository.generic import Repository
 
 

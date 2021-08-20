@@ -1,7 +1,7 @@
 import inspect
 
 from telegram import ParseMode, Update, CallbackQuery, ReplyMarkup
-from telegram.ext import Updater, CallbackContext, CallbackQueryHandler
+from telegram.ext import Updater
 
 from ring_of_fire_bot.utils.utils import get_logger
 
