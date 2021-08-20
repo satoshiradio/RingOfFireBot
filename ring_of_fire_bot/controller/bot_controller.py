@@ -41,14 +41,9 @@ class BotController:
 
     def __process_handlers(self):
         conversation_handler = ConversationHandler(entry_points=[
-            CommandHandler("start", self.welcome_message),
-            CommandHandler("register", self.user_controller.register),
-            CommandHandler("update_username", self.user_controller.update_username),
-            CommandHandler("new_ring", self.ring_controller.new_ring),
-            CommandHandler("my_rings_as_manager", self.ring_controller.list_rings_of_sender),
-            CommandHandler("ring_info", self.ring_controller.get_ring_info),
-            CommandHandler("join", self.ring_controller.join_ring),
-            CommandHandler("ring_status", self.ring_controller.set_ring_status_command),
+            CommandHandler("start", self.welcome_message)
         ],
             states={}, fallbacks=[], allow_reentry=True)
+        self.dispatcher.add_handler(self.ring_controller.get_commands())
+        self.dispatcher.add_handler(self.user_controller.get_commands())
         self.dispatcher.add_handler(conversation_handler)

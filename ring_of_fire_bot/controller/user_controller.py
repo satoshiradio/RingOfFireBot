@@ -1,6 +1,6 @@
 from sqlalchemy.exc import NoResultFound
 from telegram import Update
-from telegram.ext import Updater, CallbackContext
+from telegram.ext import Updater, CallbackContext, ConversationHandler, CommandHandler
 
 from ring_of_fire_bot.model.user import User
 from ring_of_fire_bot.repository.user_repository import UserRepository
@@ -15,6 +15,13 @@ class UserController:
         self.user_repository = user_repository
         self.userView: UserView = UserView(self.updater)
         self.error_view: ErrorView = ErrorView(self.updater)
+
+    def get_commands(self):
+        return ConversationHandler(entry_points=[
+            CommandHandler("register", self.register),
+            CommandHandler("update_username", self.update_username),
+        ],
+            states={}, fallbacks=[], allow_reentry=True)
 
     def register(self, update: Update, context: CallbackContext):
         # check if in DM

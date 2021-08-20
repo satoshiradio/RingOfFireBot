@@ -2,7 +2,7 @@ import json
 
 from sqlalchemy.exc import NoResultFound
 from telegram import Update, ParseMode
-from telegram.ext import CallbackContext, Updater
+from telegram.ext import CallbackContext, Updater, ConversationHandler, CommandHandler
 
 from ring_of_fire_bot.model.ring import Ring
 from ring_of_fire_bot.model.ring_status import STATUS
@@ -23,6 +23,16 @@ class RingController:
         self.user_repository = user_repository
         self.ring_view: RingView = RingView(self.updater)
         self.error_view: ErrorView = ErrorView(self.updater)
+
+    def get_commands(self):
+        return ConversationHandler(entry_points=[
+            CommandHandler("new_ring", self.new_ring),
+            CommandHandler("my_rings_as_manager", self.list_rings_of_sender),
+            CommandHandler("ring_info", self.get_ring_info),
+            CommandHandler("join", self.join_ring),
+            CommandHandler("ring_status", self.set_ring_status_command),
+        ],
+            states={}, fallbacks=[], allow_reentry=True)
 
     def ring_callbacks(self, update: Update, context: CallbackContext):
         callback_function = json.loads(update.callback_query.data)['function']
@@ -84,7 +94,6 @@ class RingController:
         message = detail_ring(ring)
         print(message[1])
         update.callback_query.edit_message_text(message[1], parse_mode=ParseMode.HTML)
-        # self.ring_view.message_sender.send_message(self.ring_view.detail_ring())
 
     def ring_detail(self, ring_id):
         ring = self.ring_repository.get(ring_id)
