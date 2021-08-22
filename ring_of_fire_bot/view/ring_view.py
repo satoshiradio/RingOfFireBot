@@ -62,9 +62,9 @@ class RingView:
         keyboard = []
 
         for ring in rings:
-            json_data = {'controller': 'ring',
-                         'function': 'detail',
-                         'ring_id': ring.ring_id
+            json_data = {'c': 'r',
+                         'f': 'd',
+                         'r': ring.ring_id
                          }
             keyboard.append([InlineKeyboardButton(str(ring.ring_id), callback_data=json.dumps(json_data))])
         self.message_sender.send_message(chat_id, self.rings_of_ring_manager_text,
@@ -75,8 +75,8 @@ class RingView:
         for status in RING_STATUS.list():
             # c = controller, f = function, r = ring_id, s = status
             # using chars because otherwise the data is to big, only 64 utf-8 bytes allowed
-            json_data = {'c': 'ring',
-                         'f': 'set_status',
+            json_data = {'c': 'r',
+                         'f': 's',
                          'r': ring_id,
                          's': str(status.name)
                          }

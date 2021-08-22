@@ -1,5 +1,4 @@
 import json
-from functools import wraps
 
 from sqlalchemy.exc import NoResultFound
 from telegram import Update, ParseMode
@@ -7,8 +6,6 @@ from telegram.ext import CallbackContext, Updater, ConversationHandler, CommandH
 
 from ring_of_fire_bot.model.ring import Ring
 from ring_of_fire_bot.model.ring_status import RING_STATUS
-from ring_of_fire_bot.model.user import User
-from ring_of_fire_bot.model.user_in_ring import UserInRing
 from ring_of_fire_bot.repository.ring_repository import RingRepository
 from ring_of_fire_bot.repository.user_repository import UserRepository
 from ring_of_fire_bot.utils.chat_functions import user_admin
@@ -46,10 +43,10 @@ class RingController:
 
     def ring_callbacks(self, update: Update, context: CallbackContext):
         callback_function = json.loads(update.callback_query.data)['f']
-        if callback_function == 'detail':
+        if callback_function == 'd':
             self.ring_detail_update(update, context)
             return
-        if callback_function == 'set_status':
+        if callback_function == 's':
             self.set_ring_status_callback(update, context)
             return
 
@@ -141,7 +138,7 @@ class RingController:
 
     def ring_detail_update(self, update, context: CallbackContext):
         json_data = json.loads(update.callback_query.data)
-        ring_id = json_data['ring_id']
+        ring_id = json_data['r']
         ring = self.find_ring(ring_id, update.effective_chat.id)
         if not ring:
             return

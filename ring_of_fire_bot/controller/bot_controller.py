@@ -39,7 +39,7 @@ class BotController:
     def __process_callbacks(self, update: Update, context: CallbackContext) -> None:
         query = update.callback_query
         query.answer()
-        if json.loads(update.callback_query.data)['c'] == 'ring':
+        if json.loads(update.callback_query.data)['c'] == 'r':
             self.ring_controller.ring_callbacks(update, context)
 
         if json.loads(update.callback_query.data)['c'] == 'uir':
