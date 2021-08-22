@@ -1,3 +1,5 @@
+from sqlalchemy.exc import NoResultFound
+
 from ring_of_fire_bot.model.channel_status import CHANNEL_STATUS
 from ring_of_fire_bot.model.ring import Ring
 from ring_of_fire_bot.model.ring_status import RING_STATUS
@@ -12,13 +14,19 @@ class RingRepository(Repository[Ring]):
         super().__init__(database)
 
     def get_rings_by_ring_manager(self, ring_manager_id):
-        return self._new_query() \
+        result = self._new_query() \
             .filter(Ring.ring_manager.has(User.user_id == ring_manager_id)) \
             .filter(Ring.status != RING_STATUS.FINISHED.value) \
             .all()
+        if not result:
+            raise NoResultFound("No result was found.")
+        return result
 
     def get_ring_by_chat_id(self, chat_id):
-        return self._new_query().filter(Ring.chat_id == chat_id).first()
+        result = self._new_query().filter(Ring.chat_id == chat_id).first()
+        if not result:
+            raise NoResultFound("No result was found.")
+        return result
 
     def update_ring_status(self, ring: Ring, status: RING_STATUS):
         ring.set_status(status)
@@ -45,10 +53,13 @@ class RingRepository(Repository[Ring]):
         self._session.commit()
 
     def find_user_in_ring(self, ring: Ring, user: User):
-        return self._session \
+        result = self._session \
             .query(UserInRing) \
             .filter(UserInRing.user_id == user.user_id) \
             .filter(UserInRing.ring_id == ring.ring_id).first()
+        if not result:
+            raise NoResultFound("No result was found.")
+        return result
 
     def remove_user(self, ring: Ring, user: User):
         user_in_ring = self.find_user_in_ring(ring, user)

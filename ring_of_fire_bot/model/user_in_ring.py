@@ -1,7 +1,7 @@
 
 
-from sqlalchemy import Integer, Column, String, ForeignKey, Boolean, Enum
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy import Column, ForeignKey, Boolean, Enum
+from sqlalchemy.orm import relationship
 
 from ring_of_fire_bot.model.channel_status import CHANNEL_STATUS
 from ring_of_fire_bot.model.database import Base

@@ -1,5 +1,4 @@
 from sqlalchemy import Integer, Column, String
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship
 
 from ring_of_fire_bot.model.Exceptions.invalid_node_key_exception import InvalidNodeKeyException

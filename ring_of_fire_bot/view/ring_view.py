@@ -1,6 +1,6 @@
 import json
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyMarkup
 from telegram.ext import Updater
 from telegram.utils.helpers import mention_html
 
@@ -11,7 +11,6 @@ from ring_of_fire_bot.view.message_sender import MessageSender
 
 
 def detail_ring(ring: Ring):
-    chat_id = 0
     text = f"""
 ID: {ring.ring_id}
 Name: {ring.ring_name}
@@ -42,7 +41,7 @@ Node id not set
 """
 
     keyboard = InlineKeyboardMarkup
-    return chat_id, text, keyboard
+    return text, keyboard
 
 
 class RingView:
@@ -52,12 +51,19 @@ class RingView:
     def __init__(self, updater: Updater):
         self.message_sender = MessageSender(updater)
 
+    def send_message(self, chat_id, text: str, keyboard: ReplyMarkup = None) -> None:
+        self.message_sender.send_message(chat_id, text, keyboard)
+
     def init_new_ring(self, chat_id: int):
         self.message_sender.send_message(chat_id, self.init_text)
 
+    def send_ring_detail(self, chat_id: int, ring: Ring):
+        detail = detail_ring(ring)
+        self.send_message(chat_id, detail[0])
+
     def list_all_rings_of_ring_manager(self, chat_id, rings):
         if len(rings) < 1:
-            self.message_sender.send_warning(chat_id, "You are not a ring manager of an active ring of fire")
+            self.message_sender.send_message(chat_id, "You are not a ring manager of an active ring of fire")
             return
         keyboard = []
 
