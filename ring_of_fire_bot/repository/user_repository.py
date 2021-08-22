@@ -7,7 +7,14 @@ class UserRepository(Repository[User]):
         self.Model = User
         super().__init__(database)
 
-    def update_username(self, entity_id, username: str):
-        user = self.get(entity_id)
+    def update_username(self, user: User, username: str):
         user.set_username(username)
+        self._session.commit()
+
+    def update_node_id(self, user: User, node_id: str):
+        user.set_node_id(node_id)
+        self._session.commit()
+
+    def remove_node_id(self, user: User):
+        user.remove_node_id()
         self._session.commit()

@@ -1,0 +1,2 @@
+class InvalidNodeKeyException(Exception):
+    pass

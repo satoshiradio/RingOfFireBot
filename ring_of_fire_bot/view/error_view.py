@@ -11,3 +11,6 @@ class ErrorView:
 
     def not_in_private(self, chat_id: int):
         self.message_sender.send_warning(chat_id, text=self.not_in_private_text)
+
+    def send_warning(self, chat_id: int, message: str):
+        self.message_sender.send_warning(chat_id, message)

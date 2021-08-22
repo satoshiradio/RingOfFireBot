@@ -1,4 +1,5 @@
 import json
+from functools import wraps
 
 from sqlalchemy.exc import NoResultFound
 from telegram import Update, ParseMode
@@ -8,6 +9,7 @@ from ring_of_fire_bot.model.ring import Ring
 from ring_of_fire_bot.model.ring_status import STATUS
 from ring_of_fire_bot.repository.ring_repository import RingRepository
 from ring_of_fire_bot.repository.user_repository import UserRepository
+from ring_of_fire_bot.utils.chat_functions import user_admin
 from ring_of_fire_bot.view.error_view import ErrorView
 from ring_of_fire_bot.view.ring_view import RingView, detail_ring
 
@@ -26,9 +28,9 @@ class RingController:
             CommandHandler("my_rings_as_manager", self.list_rings_of_sender),
             CommandHandler("ring_info", self.get_ring_info),
             CommandHandler("join", self.join_ring),
-            CommandHandler("ring_status", self.set_ring_status_command),
-            CommandHandler("set_chat", self.set_chat_id),
-            CommandHandler("remove_chat", self.remove_chat_id)
+            CommandHandler("ring_status", self.set_ring_status_command),  # manager+admins
+            CommandHandler("set_chat", self.set_chat_id),  # manager+admins
+            CommandHandler("remove_chat", self.remove_chat_id)  # manager+admins
         ],
             states={}, fallbacks=[], allow_reentry=True)
 
@@ -60,7 +62,7 @@ class RingController:
             return
         split_text = update.message.text.split(' ', 1)
         if len(split_text) < 2:
-            self.error_view.message_sender.send_warning("Please provide a ring name!")
+            self.error_view.message_sender.send_warning(update.effective_chat.id, "Please provide a ring name!")
             return
         ring_name = split_text[1]
         ring = Ring(user, ring_name=ring_name)
@@ -91,6 +93,7 @@ class RingController:
         self.ring_repository.update_ring_status(ring_id, status)
         update.callback_query.edit_message_text(f"Set ring status to {status.value}", parse_mode=ParseMode.HTML)
 
+    @user_admin
     def set_chat_id(self, update: Update, context: CallbackContext):
         ring_id = int(update.message.text.split(' ', 2)[1])
         ring = self.find_ring(ring_id, update.effective_chat.id)

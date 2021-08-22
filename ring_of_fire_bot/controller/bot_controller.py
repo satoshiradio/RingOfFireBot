@@ -3,6 +3,7 @@ import json
 from telegram import Update
 from telegram.ext import ConversationHandler, CommandHandler, CallbackContext, CallbackQueryHandler, Updater
 
+from ring_of_fire_bot.controller.error_controller import error_handler
 from ring_of_fire_bot.controller.ring_controller import RingController
 from ring_of_fire_bot.controller.user_controller import UserController
 from ring_of_fire_bot.repository.ring_repository import RingRepository
@@ -47,3 +48,4 @@ class BotController:
         self.dispatcher.add_handler(self.ring_controller.get_commands())
         self.dispatcher.add_handler(self.user_controller.get_commands())
         self.dispatcher.add_handler(conversation_handler)
+        self.dispatcher.add_error_handler(error_handler)
