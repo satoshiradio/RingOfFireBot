@@ -6,7 +6,9 @@ from telegram import Update, ParseMode
 from telegram.ext import CallbackContext, Updater, ConversationHandler, CommandHandler
 
 from ring_of_fire_bot.model.ring import Ring
-from ring_of_fire_bot.model.ring_status import STATUS
+from ring_of_fire_bot.model.ring_status import RING_STATUS
+from ring_of_fire_bot.model.user import User
+from ring_of_fire_bot.model.user_in_ring import UserInRing
 from ring_of_fire_bot.repository.ring_repository import RingRepository
 from ring_of_fire_bot.repository.user_repository import UserRepository
 from ring_of_fire_bot.utils.chat_functions import user_admin
@@ -28,6 +30,7 @@ class RingController:
             CommandHandler("my_rings_as_manager", self.list_rings_of_sender),
             CommandHandler("ring_info", self.get_ring_info),
             CommandHandler("join", self.join_ring),
+            CommandHandler("leave", self.leave_ring),
             CommandHandler("ring_status", self.set_ring_status_command),  # manager+admins
             CommandHandler("set_chat", self.set_chat_id),  # manager+admins
             CommandHandler("remove_chat", self.remove_chat_id)  # manager+admins
@@ -42,11 +45,11 @@ class RingController:
             return
 
     def ring_callbacks(self, update: Update, context: CallbackContext):
-        callback_function = json.loads(update.callback_query.data)['function']
+        callback_function = json.loads(update.callback_query.data)['f']
         if callback_function == 'detail':
             self.ring_detail_update(update, context)
             return
-        if callback_function == 'status':
+        if callback_function == 'set_status':
             self.set_ring_status_callback(update, context)
             return
 
@@ -81,7 +84,7 @@ class RingController:
 
     def set_ring_status_callback(self, update, context):
         json_data = json.loads(update.callback_query.data)
-        ring_id = json_data['ring_id']
+        ring_id = json_data['r']
         ring = self.find_ring(ring_id, update.effective_chat.id)
         if not ring:
             return
@@ -89,8 +92,8 @@ class RingController:
         if ring.ring_manager_id != update.callback_query.from_user.id:
             self.error_view.message_sender.send_warning("Only the ring manager can set the status!")
 
-        status = STATUS[json_data['status']]
-        self.ring_repository.update_ring_status(ring_id, status)
+        status = RING_STATUS[json_data['s']]
+        self.ring_repository.update_ring_status(ring, status)
         update.callback_query.edit_message_text(f"Set ring status to {status.value}", parse_mode=ParseMode.HTML)
 
     @user_admin
@@ -121,16 +124,20 @@ class RingController:
             return
         user = self.user_repository.get(update.effective_user.id)
         # check if user is already part of the ring or is the ring manager
-        if ring.is_user_member(update.effective_user.id) or ring.is_manager(update.effective_user.id):
+        if ring.is_user_member(user):
             self.error_view.message_sender.send_warning(update.effective_chat.id, "Already in this group")
             return
         self.ring_repository.add_member_to_ring(ring, user)
+        self.ring_view.message_sender.send_message(update.effective_chat.id, "Welcome to the ring!")
 
     def leave_ring(self, update: Update, context: CallbackContext):
         ring_id = int(update.message.text.split(' ', 1)[1])
         ring = self.find_ring(ring_id, update.effective_chat.id)
+        user = self.user_repository.get(update.effective_user.id)
         if not ring:
             return
+        self.ring_repository.remove_user(ring, user)
+        self.ring_view.message_sender.send_message("You left the ring!")
 
     def ring_detail_update(self, update, context: CallbackContext):
         json_data = json.loads(update.callback_query.data)

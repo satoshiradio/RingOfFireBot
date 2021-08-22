@@ -4,8 +4,9 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Updater
 from telegram.utils.helpers import mention_html
 
+from ring_of_fire_bot.model.channel_status import CHANNEL_STATUS
 from ring_of_fire_bot.model.ring import Ring
-from ring_of_fire_bot.model.ring_status import STATUS
+from ring_of_fire_bot.model.ring_status import RING_STATUS
 from ring_of_fire_bot.view.message_sender import MessageSender
 
 
@@ -20,9 +21,26 @@ Max participants: {ring.max_ring_members}
 Manager: {mention_html(ring.ring_manager.user_id, ring.ring_manager.user_username)}
 Members:"""
 
-    for member in ring.ring_members:
+    for userInRing in ring.users:
         text = f"""{text}
-{mention_html(member.user_id, member.user_username)}"""
+{mention_html(userInRing.user.user_id, userInRing.user.user_username)}"""
+        if userInRing.is_funded:
+            text = f"{text}🙌🏻"
+        if userInRing.channel_status == CHANNEL_STATUS.PENDING:
+            text = f"{text}⏳"
+        if userInRing.channel_status == CHANNEL_STATUS.OPEN:
+            text = f"{text}✅"
+        if userInRing.user.node_id:
+            text = f"""{text}
+{userInRing.user.node_id}
+
+"""
+        else:
+            text = f"""{text}
+Node id not set
+
+"""
+
     keyboard = InlineKeyboardMarkup
     return chat_id, text, keyboard
 
@@ -54,12 +72,57 @@ class RingView:
 
     def set_status(self, chat_id, ring_id):
         keyboard = []
-        for status in STATUS.list():
-            json_data = {'controller': 'ring',
-                         'function': 'set_status',
-                         'ring_id': ring_id,
-                         'status': status.split('.', 1)[1]
+        for status in RING_STATUS.list():
+            # c = controller, f = function, r = ring_id, s = status
+            # using chars because otherwise the data is to big, only 64 utf-8 bytes allowed
+            json_data = {'c': 'ring',
+                         'f': 'set_status',
+                         'r': ring_id,
+                         's': str(status.name)
                          }
+
             keyboard.append([InlineKeyboardButton(str(status.value),
                                                   callback_data=json.dumps(json_data))])
         self.message_sender.send_message(chat_id, "Set status of the ring to:", keyboard=InlineKeyboardMarkup(keyboard))
+
+    def set_channel_status(self, chat_id, ring_id, user_id):
+        keyboard = []
+
+        for status in CHANNEL_STATUS.list():
+            json_data = {'c': 'uir',
+                         'f': 'cs',
+                         'r': ring_id,
+                         'u': user_id,
+                         's': str(status.name)
+                         }
+            keyboard.append([InlineKeyboardButton(str(status.value),
+                                                  callback_data=json.dumps(json_data))])
+        self.message_sender.send_message(chat_id, "Set channel status to:",
+                                         keyboard=InlineKeyboardMarkup(keyboard))
+
+    def set_funded(self, chat_id, ring_id, user_id):
+
+        keyboard = []
+
+        false = {'c': 'uir',
+                 'f': 'f',
+                 'r': ring_id,
+                 'u': user_id,
+                 's': False
+                 }
+        ready = {'c': 'uir',
+                 'f': 'f',
+                 'r': ring_id,
+                 'u': user_id,
+                 's': True
+                 }
+        keyboard.append(
+            [InlineKeyboardButton("Not yet",
+                                  callback_data=json.dumps(false))],
+        )
+        keyboard.append(
+            [InlineKeyboardButton("Sats are ready",
+                                  callback_data=json.dumps(ready))],
+        )
+        self.message_sender.send_message(chat_id, "Set channel status to:",
+                                         keyboard=InlineKeyboardMarkup(keyboard))

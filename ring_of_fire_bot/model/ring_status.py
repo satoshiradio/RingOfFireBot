@@ -1,14 +1,8 @@
-from enum import Enum
+from ring_of_fire_bot.utils.ExtendedEnum import ExtendedEnum
 
 
-class ExtendedEnum(Enum):
-    @classmethod
-    def list(cls):
-        return list(map(lambda c: c, cls))
-
-
-class STATUS(ExtendedEnum):
-    WAITING_ON_PARTICIPANTS = "Waiting on participants to join"
-    OPENING_CHANNELS = "Opening channels"
+class RING_STATUS(ExtendedEnum):
+    WAITING = "Waiting on participants to join"
+    OPENING = "Opening channels"
     BALANCING = "Balancing channels"
     FINISHED = "Ring is finished"

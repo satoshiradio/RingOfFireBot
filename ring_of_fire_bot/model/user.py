@@ -1,4 +1,6 @@
 from sqlalchemy import Integer, Column, String
+from sqlalchemy.ext.associationproxy import association_proxy
+from sqlalchemy.orm import relationship
 
 from ring_of_fire_bot.model.Exceptions.invalid_node_key_exception import InvalidNodeKeyException
 from ring_of_fire_bot.model.database import Base
@@ -11,6 +13,7 @@ class User(Base):
     user_id = Column(Integer, primary_key=True)
     user_username = Column(String(256))
     node_id = Column(String(LND_PUBKEY_LENGTH))
+    rings = relationship("UserInRing", back_populates="user", cascade="all, delete, delete-orphan")
 
     def __init__(self, user_id: int, user_username: str):
         self.user_id = user_id
