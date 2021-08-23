@@ -33,49 +33,59 @@ class UserInRingController:
             self.set_funded_callback(update, context)
             return
 
-    def find_ring(self, ring_id: int, chat_id: int):
-        try:
-            return self.unit_of_work.i_ring_repository.get(ring_id)
-        except NoResultFound:
-            self.error_view.message_sender.send_warning(chat_id, "Ring id is invalid")
-            return
-
     def set_funded_command(self, update: Update, context: CallbackContext):
-        ring_id = int(update.message.text.split(' ', 1)[1])
-        ring = self.find_ring(ring_id, update.effective_chat.id)
-        if not ring:
+        chat_id = update.effective_chat.id
+        try:
+            ring = self.unit_of_work.ring_repository.get_ring(update.message.text, chat_id)
+        except NoResultFound:
+            self.error_view.ring_not_found(chat_id)
             return
-        self.ring_view.set_funded(update.effective_chat.id, ring_id, update.effective_user.id)
+        self.ring_view.set_funded(chat_id, ring.ring_id, update.effective_user.id)
 
     def set_channel_status_callback(self, update: Update, context: CallbackContext):
+        chat_id: int = update.effective_chat.id
+        # get data from response
         json_data = json.loads(update.callback_query.data)
         ring_id = json_data['r']
         user_id = json_data['u']
+        status = CHANNEL_STATUS[json_data['s']]
+        # if other user presses button ignore
         if update.callback_query.from_user.id != user_id:
             return
+        # find ring from callback data
         try:
-            ring = self.find_ring(ring_id, update.effective_chat.id)
+            ring = self.unit_of_work.ring_repository.get(ring_id)
         except NoResultFound:
-            self.error_view.ring_not_found(update.effective_chat.id)
+            self.error_view.ring_not_found(chat_id)
             return
-        user = self.unit_of_work.i_user_repository.get(user_id)
-
-        status = CHANNEL_STATUS[json_data['s']]
+        # find user
         try:
-            user_in_ring = self.unit_of_work.i_user_in_ring_repository.find_user_in_ring(ring, user)
+            user = self.unit_of_work.user_repository.get(user_id)
         except NoResultFound:
-            self.error_view.ring_not_found(update.effective_chat.id)
+            self.error_view.not_registered(chat_id)
             return
+        # find user in ring
+        try:
+            user_in_ring = self.unit_of_work.user_in_ring_repository.find_user_in_ring(ring, user)
+        except NoResultFound:
+            self.error_view.ring_not_found(chat_id)
+            return
+        # update user in ring
         user_in_ring.channel_status = status
         self.unit_of_work.complete()
-        update.callback_query.edit_message_text(f"Set channel status to {status.value}", parse_mode=ParseMode.HTML)
+        # inform user
+        update.callback_query.edit_message_text(
+            f"Set channel status to {status.value}",
+            parse_mode=ParseMode.HTML)
 
     def set_channel_status_command(self, update: Update, context: CallbackContext):
-        ring_id = int(update.message.text.split(' ', 1)[1])
-        ring = self.find_ring(ring_id, update.effective_chat.id)
-        if not ring:
+        chat_id = update.effective_chat.id
+        try:
+            ring = self.unit_of_work.ring_repository.get_ring(update.message.text, chat_id)
+        except NoResultFound:
+            self.error_view.ring_not_found(update.effective_chat.id)
             return
-        self.ring_view.set_channel_status(update.effective_chat.id, ring_id, update.effective_user.id)
+        self.ring_view.set_channel_status(chat_id, ring.ring_id, update.effective_user.id)
 
     def set_funded_callback(self, update: Update, context: CallbackContext):
         json_data = json.loads(update.callback_query.data)
@@ -84,13 +94,17 @@ class UserInRingController:
         funded: bool = json_data['s']
         if update.callback_query.from_user.id != user_id:
             return
-
-        ring = self.find_ring(ring_id, update.effective_chat.id)
-        if not ring:
+        try:
+            ring = self.unit_of_work.ring_repository.get(ring_id)
+        except NoResultFound:
+            self.error_view.ring_not_found(update.effective_chat.id)
             return
-        user = self.unit_of_work.i_user_repository.get(user_id)
+        user = self.unit_of_work.user_repository.get(user_id)
 
-        user_in_ring = self.unit_of_work.i_user_in_ring_repository.find_user_in_ring(ring, user)
+        user_in_ring = self.unit_of_work.user_in_ring_repository.find_user_in_ring(ring, user)
         user_in_ring.is_funded = funded
         self.unit_of_work.complete()
-        update.callback_query.edit_message_text(f"Set funded status to {user_in_ring.is_funded}", parse_mode=ParseMode.HTML)
+        update.callback_query.edit_message_text(
+            f"Set funded status to {user_in_ring.is_funded}",
+            parse_mode=ParseMode.HTML)
+

@@ -1,9 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, TypeVar, Type
-
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.orm import Session
-
+from typing import Generic, TypeVar
 
 from ring_of_fire_bot.model.database import Base
 

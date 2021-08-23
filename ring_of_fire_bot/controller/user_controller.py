@@ -34,12 +34,12 @@ class UserController:
 
         sender = update.effective_user
         try:
-            _ = self.unit_of_work.i_user_repository.get(sender.id)
+            _ = self.unit_of_work.user_repository.get(sender.id)
             # if user_repository.get does not throw a NoResultFound exception the user has already registered
-            self.error_view.message_sender.send_warning(update.effective_chat.id, "You are already registered!")
+            self.error_view.send_message(update.effective_chat.id, "You are already registered!")
         except NoResultFound:
             user = User(sender.id, sender.username)
-            self.unit_of_work.i_user_repository.add(user)
+            self.unit_of_work.user_repository.add(user)
             self.userView.registered(update.effective_chat.id)
             return
 
@@ -48,13 +48,13 @@ class UserController:
             self.error_view.not_in_private(update.effective_chat.id)
             return
         try:
-            user = self.unit_of_work.i_user_repository.get(update.effective_user.id)
+            user = self.unit_of_work.user_repository.get(update.effective_user.id)
             user.set_username(update.effective_user.username)
             self.unit_of_work.complete()
             self.userView.updated_username(update.effective_chat.id, user.user_username)
         except NoResultFound:
-            self.error_view.message_sender.send_warning(update.effective_chat.id, "Please /register before updating "
-                                                                                  "your username")
+            self.error_view.send_message(update.effective_chat.id, "Please /register before updating "
+                                                                   "your username")
 
     def set_node_id(self, update: Update, context: CallbackContext):
         node_id = update.message.text.split(' ', 1)[1]
@@ -62,7 +62,7 @@ class UserController:
             self.error_view.not_in_private(update.effective_chat.id)
             return
         try:
-            user = self.unit_of_work.i_user_repository.get(update.effective_user.id)
+            user = self.unit_of_work.user_repository.get(update.effective_user.id)
             user.set_node_id(node_id)
             self.unit_of_work.complete()
             self.userView.updated_node_id(update.effective_chat.id, node_id)
@@ -77,7 +77,7 @@ class UserController:
             self.error_view.not_in_private(update.effective_chat.id)
             return
         try:
-            user: User = self.unit_of_work.i_user_repository.get(update.effective_user.id)
+            user: User = self.unit_of_work.user_repository.get(update.effective_user.id)
             user.remove_node_id()
             self.unit_of_work.complete()
             self.userView.removed_node_id(update.effective_chat.id)

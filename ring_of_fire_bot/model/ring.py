@@ -36,7 +36,7 @@ class Ring(Base):
     def set_max_ring_members(self, max_ring_members: int):
         self.max_ring_members = max_ring_members
 
-    def add_member(self, user: User):
+    def add_user(self, user: User):
         user_in_ring = UserInRing()
 
         user_in_ring.user = user
@@ -48,8 +48,8 @@ class Ring(Base):
     def is_user_member(self, user: User) -> bool:
         return any(member.user_id == user.user_id for member in self.users)
 
-    def is_manager(self, user: User) -> bool:
-        return user.user_id == self.ring_manager.user_id
+    def is_manager(self, user_id: int) -> bool:
+        return user_id == self.ring_manager.user_id
 
     def set_chat_id(self, chat_id: int):
         self.chat_id = chat_id

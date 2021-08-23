@@ -1,5 +1,6 @@
 from sqlalchemy.exc import NoResultFound
 
+from ring_of_fire_bot.model.Exceptions.invalid_node_key_exception import InvalidNodeKeyException
 from ring_of_fire_bot.model.ring import Ring
 from ring_of_fire_bot.model.ring_status import RING_STATUS
 from ring_of_fire_bot.model.user import User
@@ -26,10 +27,21 @@ class RingRepository(IRingRepository):
             raise NoResultFound("No result was found.")
         return result
 
-    def remove_user(self, ring: Ring, user: User) -> Ring:
-        user_in_ring = self.find_user_in_ring(ring, user)
-        ring.users.remove(user_in_ring)
-        return ring
+    # can only be used if the only argument is the ring_id
+    def get_ring(self, message: str, chat_id: int) -> Ring:
+        split_message = message.split(' ')
+        # if ring_id is provided find ring with that ID
+        if len(split_message) < 2:
+            # no ring provided
+            ring = self.get_ring_by_chat_id(chat_id)
+            if ring:
+                return ring
+            else:
+                raise InvalidNodeKeyException
+        # check if chat has a ring
+        else:
+            ring_id = int(split_message[1])
+            return self.get(ring_id)
 
 
 

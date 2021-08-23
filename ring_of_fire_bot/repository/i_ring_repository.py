@@ -16,3 +16,6 @@ class IRingRepository(Repository[Ring]):
 
     def remove_user(self, ring: Ring, user: User) -> Ring:
         raise NotImplementedError
+
+    def get_ring(self, message: str, chat_id: int) -> Ring:
+        raise NotImplementedError

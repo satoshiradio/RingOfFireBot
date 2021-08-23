@@ -26,7 +26,6 @@ class BotController:
         # Views
         self.welcome_view: WelcomeView = WelcomeView(self.updater)
         self.error_view: ErrorView = ErrorView(self.updater)
-
         # handlers
         self.__process_handlers()
         self.dispatcher.add_handler(CallbackQueryHandler(self.__process_callbacks))

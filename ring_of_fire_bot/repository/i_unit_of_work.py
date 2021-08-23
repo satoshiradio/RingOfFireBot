@@ -8,17 +8,17 @@ from ring_of_fire_bot.repository.i_user_repository import IUserRepository
 class IUnitOfWork(ABC):
     @property
     @abstractmethod
-    def i_ring_repository(self) -> IRingRepository:
+    def ring_repository(self) -> IRingRepository:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def i_user_repository(self) -> IUserRepository:
+    def user_repository(self) -> IUserRepository:
         raise NotImplementedError
 
     @property
     @abstractmethod
-    def i_user_in_ring_repository(self) -> IUserInRingRepository:
+    def user_in_ring_repository(self) -> IUserInRingRepository:
         raise NotImplementedError
 
     @abstractmethod

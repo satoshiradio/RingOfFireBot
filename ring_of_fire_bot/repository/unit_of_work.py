@@ -14,21 +14,21 @@ class UnitOfWork(IUnitOfWork):
         self.database = Database(config.DbConfig.SQLALCHEMY_DATABASE_URI)
         self.session = self.database.session()
         # repositories
-        self.ring_repository = RingRepository(self.session)
-        self.user_repository = UserRepository(self.session)
-        self.user_in_ring_repository = UserInRingRepository(self.session)
+        self.ring_repository_value = RingRepository(self.session)
+        self.user_repository_value = UserRepository(self.session)
+        self.user_in_ring_repository_value = UserInRingRepository(self.session)
 
     @property
-    def i_ring_repository(self) -> IRingRepository:
-        return self.ring_repository
+    def ring_repository(self) -> IRingRepository:
+        return self.ring_repository_value
 
     @property
-    def i_user_repository(self) -> IUserRepository:
-        return self.user_repository
+    def user_repository(self) -> IUserRepository:
+        return self.user_repository_value
 
     @property
-    def i_user_in_ring_repository(self) -> IUserInRingRepository:
-        return self.user_in_ring_repository
+    def user_in_ring_repository(self) -> IUserInRingRepository:
+        return self.user_in_ring_repository_value
 
     def complete(self) -> None:
         self.session.commit()

@@ -9,3 +9,4 @@ class IUserInRingRepository(Repository[UserInRing]):
 
     def find_user_in_ring(self, ring: Ring, user: User) -> UserInRing:
         raise NotImplementedError
+

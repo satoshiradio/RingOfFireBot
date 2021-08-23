@@ -12,7 +12,7 @@ class ErrorView:
 
     def send_message(self, chat_id, text: str, keyboard: ReplyMarkup = None) -> None:
         formatted_text = f'⚠<b>{text}</b>⚠'
-        self.send_message(chat_id, formatted_text, keyboard)
+        self.message_sender.send_message(chat_id, formatted_text, keyboard)
 
     def not_in_private(self, chat_id: int):
         self.send_message(chat_id, text=self.not_in_private_text)
@@ -25,3 +25,6 @@ class ErrorView:
 
     def not_manager(self, chat_id: id):
         self.send_message(chat_id, "Only the ring manager can perform this action")
+
+    def not_registered(self, chat_id: id):
+        self.send_message(chat_id, "The bot doesn't know you, please /register")
