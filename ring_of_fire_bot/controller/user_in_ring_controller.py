@@ -5,17 +5,15 @@ from telegram import ParseMode, Update
 from telegram.ext import Updater, ConversationHandler, CommandHandler, CallbackContext
 
 from ring_of_fire_bot.model.channel_status import CHANNEL_STATUS
-from ring_of_fire_bot.repository.ring_repository import RingRepository
-from ring_of_fire_bot.repository.user_repository import UserRepository
+from ring_of_fire_bot.repository.i_unit_of_work import IUnitOfWork
 from ring_of_fire_bot.view.error_view import ErrorView
 from ring_of_fire_bot.view.ring_view import RingView
 
 
 class UserInRingController:
-    def __init__(self, updater: Updater, ring_repository: RingRepository, user_repository: UserRepository):
+    def __init__(self, updater: Updater, unit_of_work: IUnitOfWork):
         self.updater = updater
-        self.ring_repository = ring_repository
-        self.user_repository = user_repository
+        self.unit_of_work = unit_of_work
         self.ring_view: RingView = RingView(self.updater)
         self.error_view: ErrorView = ErrorView(self.updater)
 
@@ -37,7 +35,7 @@ class UserInRingController:
 
     def find_ring(self, ring_id: int, chat_id: int):
         try:
-            return self.ring_repository.get(ring_id)
+            return self.unit_of_work.i_ring_repository.get(ring_id)
         except NoResultFound:
             self.error_view.message_sender.send_warning(chat_id, "Ring id is invalid")
             return
@@ -55,14 +53,21 @@ class UserInRingController:
         user_id = json_data['u']
         if update.callback_query.from_user.id != user_id:
             return
-
-        ring = self.find_ring(ring_id, update.effective_chat.id)
-        if not ring:
+        try:
+            ring = self.find_ring(ring_id, update.effective_chat.id)
+        except NoResultFound:
+            self.error_view.ring_not_found(update.effective_chat.id)
             return
-        user = self.user_repository.get(user_id)
+        user = self.unit_of_work.i_user_repository.get(user_id)
 
         status = CHANNEL_STATUS[json_data['s']]
-        self.ring_repository.update_channel_status(ring, user, status)
+        try:
+            user_in_ring = self.unit_of_work.i_user_in_ring_repository.find_user_in_ring(ring, user)
+        except NoResultFound:
+            self.error_view.ring_not_found(update.effective_chat.id)
+            return
+        user_in_ring.channel_status = status
+        self.unit_of_work.complete()
         update.callback_query.edit_message_text(f"Set channel status to {status.value}", parse_mode=ParseMode.HTML)
 
     def set_channel_status_command(self, update: Update, context: CallbackContext):
@@ -83,7 +88,9 @@ class UserInRingController:
         ring = self.find_ring(ring_id, update.effective_chat.id)
         if not ring:
             return
-        user = self.user_repository.get(user_id)
+        user = self.unit_of_work.i_user_repository.get(user_id)
 
-        self.ring_repository.update_funded(ring, user, funded)
-        update.callback_query.edit_message_text(f"Set funded status to {funded}", parse_mode=ParseMode.HTML)
+        user_in_ring = self.unit_of_work.i_user_in_ring_repository.find_user_in_ring(ring, user)
+        user_in_ring.is_funded = funded
+        self.unit_of_work.complete()
+        update.callback_query.edit_message_text(f"Set funded status to {user_in_ring.is_funded}", parse_mode=ParseMode.HTML)

@@ -7,24 +7,22 @@ from ring_of_fire_bot.controller.error_controller import error_handler
 from ring_of_fire_bot.controller.ring_controller import RingController
 from ring_of_fire_bot.controller.user_controller import UserController
 from ring_of_fire_bot.controller.user_in_ring_controller import UserInRingController
-from ring_of_fire_bot.repository.ring_repository import RingRepository
-from ring_of_fire_bot.repository.user_repository import UserRepository
+from ring_of_fire_bot.repository.i_unit_of_work import IUnitOfWork
 from ring_of_fire_bot.view.error_view import ErrorView
 from ring_of_fire_bot.view.welcome_view import WelcomeView
 
 
 class BotController:
-    def __init__(self, updater: Updater, ring_repository: RingRepository, user_repository: UserRepository) -> None:
+    def __init__(self, updater: Updater, unit_of_work: IUnitOfWork) -> None:
+        # Telegram
         self.updater = updater
         self.dispatcher = self.updater.dispatcher
-
-        # repositories
-        self.ring_repository = ring_repository
-        self.user_repository = user_repository
+        # Unit of Work
+        self.unit_of_work = unit_of_work
         # controllers
-        self.ring_controller = RingController(self.updater, self.ring_repository, self.user_repository)
-        self.user_controller = UserController(self.updater, self.user_repository)
-        self.user_in_ring_controller = UserInRingController(self.updater, self.ring_repository, self.user_repository)
+        self.ring_controller = RingController(self.updater, self.unit_of_work)
+        self.user_controller = UserController(self.updater, self.unit_of_work)
+        self.user_in_ring_controller = UserInRingController(self.updater, self.unit_of_work)
         # Views
         self.welcome_view: WelcomeView = WelcomeView(self.updater)
         self.error_view: ErrorView = ErrorView(self.updater)

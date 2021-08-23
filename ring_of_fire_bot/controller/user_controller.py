@@ -4,16 +4,16 @@ from telegram.ext import Updater, CallbackContext, ConversationHandler, CommandH
 
 from ring_of_fire_bot.model.Exceptions.invalid_node_key_exception import InvalidNodeKeyException
 from ring_of_fire_bot.model.user import User
-from ring_of_fire_bot.repository.user_repository import UserRepository
+from ring_of_fire_bot.repository.i_unit_of_work import IUnitOfWork
 from ring_of_fire_bot.utils.utils import is_in_dm
 from ring_of_fire_bot.view.error_view import ErrorView
 from ring_of_fire_bot.view.user_view import UserView
 
 
 class UserController:
-    def __init__(self, updater: Updater, user_repository: UserRepository):
+    def __init__(self, updater: Updater, unit_of_work: IUnitOfWork):
         self.updater = updater
-        self.user_repository = user_repository
+        self.unit_of_work = unit_of_work
         self.userView: UserView = UserView(self.updater)
         self.error_view: ErrorView = ErrorView(self.updater)
 
@@ -34,12 +34,12 @@ class UserController:
 
         sender = update.effective_user
         try:
-            _ = self.user_repository.get(sender.id)
+            _ = self.unit_of_work.i_user_repository.get(sender.id)
             # if user_repository.get does not throw a NoResultFound exception the user has already registered
             self.error_view.message_sender.send_warning(update.effective_chat.id, "You are already registered!")
         except NoResultFound:
             user = User(sender.id, sender.username)
-            self.user_repository.add(user)
+            self.unit_of_work.i_user_repository.add(user)
             self.userView.registered(update.effective_chat.id)
             return
 
@@ -48,9 +48,10 @@ class UserController:
             self.error_view.not_in_private(update.effective_chat.id)
             return
         try:
-            user = self.user_repository.get(update.effective_user.id)
-            self.user_repository.update_username(user, user.user_username)
-            self.userView.updated_username(update.effective_chat.id, update.effective_user.username)
+            user = self.unit_of_work.i_user_repository.get(update.effective_user.id)
+            user.set_username(update.effective_user.username)
+            self.unit_of_work.complete()
+            self.userView.updated_username(update.effective_chat.id, user.user_username)
         except NoResultFound:
             self.error_view.message_sender.send_warning(update.effective_chat.id, "Please /register before updating "
                                                                                   "your username")
@@ -61,24 +62,26 @@ class UserController:
             self.error_view.not_in_private(update.effective_chat.id)
             return
         try:
-            user = self.user_repository.get(update.effective_user.id)
-            self.user_repository.update_node_id(user, node_id)
+            user = self.unit_of_work.i_user_repository.get(update.effective_user.id)
+            user.set_node_id(node_id)
+            self.unit_of_work.complete()
             self.userView.updated_node_id(update.effective_chat.id, node_id)
         except NoResultFound:
-            self.error_view.send_warning(update.effective_chat.id, "Please /register before updating "
+            self.error_view.send_message(update.effective_chat.id, "Please /register before updating "
                                                                    "your node id")
         except InvalidNodeKeyException:
-            self.error_view.send_warning(update.effective_chat.id, "The node id is invalid")
+            self.error_view.send_message(update.effective_chat.id, "The node id is invalid")
 
     def remove_node_id(self, update: Update, context: CallbackContext):
         if not is_in_dm(update):
             self.error_view.not_in_private(update.effective_chat.id)
             return
         try:
-            user = self.user_repository.get(update.effective_user.id)
-            self.user_repository.remove_node_id(user)
+            user: User = self.unit_of_work.i_user_repository.get(update.effective_user.id)
+            user.remove_node_id()
+            self.unit_of_work.complete()
             self.userView.removed_node_id(update.effective_chat.id)
         except NoResultFound:
-            self.error_view.send_warning(update.effective_chat.id, "Please /register before removing your node id")
+            self.error_view.send_message(update.effective_chat.id, "Please /register before removing your node id")
         except InvalidNodeKeyException:
-            self.error_view.send_warning(update.effective_chat.id, "The node id is invalid")
+            self.error_view.send_message(update.effective_chat.id, "The node id is invalid")

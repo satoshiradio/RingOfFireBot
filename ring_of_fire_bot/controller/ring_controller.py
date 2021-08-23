@@ -7,17 +7,15 @@ from telegram.ext import CallbackContext, Updater, ConversationHandler, CommandH
 from ring_of_fire_bot.model.Exceptions.invalid_node_key_exception import InvalidNodeKeyException
 from ring_of_fire_bot.model.ring import Ring
 from ring_of_fire_bot.model.ring_status import RING_STATUS
-from ring_of_fire_bot.repository.ring_repository import RingRepository
-from ring_of_fire_bot.repository.user_repository import UserRepository
+from ring_of_fire_bot.repository.i_unit_of_work import IUnitOfWork
 from ring_of_fire_bot.view.error_view import ErrorView
 from ring_of_fire_bot.view.ring_view import RingView, detail_ring
 
 
 class RingController:
-    def __init__(self, updater: Updater, ring_repository: RingRepository, user_repository: UserRepository):
+    def __init__(self, updater: Updater, unit_of_work: IUnitOfWork):
         self.updater = updater
-        self.ring_repository = ring_repository
-        self.user_repository = user_repository
+        self.unit_of_work = unit_of_work
         self.ring_view: RingView = RingView(self.updater)
         self.error_view: ErrorView = ErrorView(self.updater)
 
@@ -50,7 +48,7 @@ class RingController:
     def new_ring(self, update: Update, context: CallbackContext):
         # get user
         try:
-            user = self.user_repository.get(update.effective_user.id)
+            user = self.unit_of_work.i_user_repository.get(update.effective_user.id)
         except NoResultFound:
             self.error_view.message_sender.send_warning(update.effective_chat.id, "Please /register")
             return
@@ -61,7 +59,7 @@ class RingController:
             return
         ring_name = split_text[1]
         ring = Ring(user, ring_name=ring_name)
-        self.ring_repository.add(ring)
+        self.unit_of_work.i_ring_repository.add(ring)
         self.ring_view.init_new_ring(update.effective_chat.id)
 
     def set_ring_status_command(self, update: Update, context: CallbackContext):
@@ -86,7 +84,7 @@ class RingController:
         json_data = json.loads(update.callback_query.data)
         ring_id = json_data['r']
         try:
-            ring = self.ring_repository.get(ring_id)
+            ring = self.unit_of_work.i_ring_repository.get(ring_id)
         except NoResultFound:
             self.error_view.ring_not_found(update.effective_chat.id)
             return
@@ -95,13 +93,13 @@ class RingController:
             self.error_view.message_sender.send_warning("Only the ring manager can set the status!")
 
         status = RING_STATUS[json_data['s']]
-        self.ring_repository.update_ring_status(ring, status)
+        self.unit_of_work.i_ring_repository.update_ring_status(ring, status)
         update.callback_query.edit_message_text(f"Set ring status to {status.value}", parse_mode=ParseMode.HTML)
 
     def set_chat_id(self, update: Update, context: CallbackContext):
         try:
             ring_id = int(update.message.text.split(' ', 1)[1])
-            ring = self.ring_repository.get(ring_id)
+            ring = self.unit_of_work.i_ring_repository.get(ring_id)
         except NoResultFound:
             self.error_view.ring_not_found(update.effective_chat.id)
             return
@@ -112,7 +110,8 @@ class RingController:
         if update.effective_user.id is not ring.ring_manager.id:
             self.error_view.not_manager(update.effective_chat.id)
             return
-        self.ring_repository.set_chat_id(ring, update.effective_chat.id)
+        ring.set_chat_id(update.effective_chat.id)
+        self.unit_of_work.complete()
         self.ring_view.message_sender.send_message(update.effective_chat.id, "Chat set!")
 
     def remove_chat_id(self, update: Update, context: CallbackContext):
@@ -128,12 +127,13 @@ class RingController:
         if update.effective_user.id is not ring.ring_manager.id:
             self.error_view.not_manager(update.effective_chat.id)
             return
-        self.ring_repository.remove_chat_id(ring)
+        ring.remove_chat_id()
+        self.unit_of_work.complete()
         self.ring_view.message_sender.send_message(update.effective_chat.id, "Chat was removed from this ring!")
 
     def list_rings_of_sender(self, update: Update, context: CallbackContext):
         try:
-            rings: [Ring] = self.ring_repository.get_rings_by_ring_manager(update.effective_user.id)
+            rings: [Ring] = self.unit_of_work.i_ring_repository.get_rings_by_ring_manager(update.effective_user.id)
         except NoResultFound:
             self.error_view.ring_not_found(update.effective_chat.id)
             return
@@ -149,7 +149,7 @@ class RingController:
             self.error_view.ring_id_not_provided(update.effective_chat.id)
             return
         try:
-            user = self.user_repository.get(update.effective_user.id)
+            user = self.unit_of_work.i_ring_repository.get(update.effective_user.id)
         except NoResultFound:
             self.error_view.send_message(update.effective_chat.id, "You are not part of this ring!")
             return
@@ -157,7 +157,8 @@ class RingController:
         if ring.is_user_member(user):
             self.error_view.message_sender.send_warning(update.effective_chat.id, "Already in this group")
             return
-        self.ring_repository.add_member_to_ring(ring, user)
+        ring.add_member(user)
+        self.unit_of_work.complete()
         self.ring_view.message_sender.send_message(update.effective_chat.id, "Welcome to the ring!")
 
     def leave_ring(self, update: Update, context: CallbackContext):
@@ -169,21 +170,21 @@ class RingController:
         except InvalidNodeKeyException:
             self.error_view.ring_id_not_provided(update.effective_chat.id)
             return
-        user = self.user_repository.get(update.effective_user.id)
+        user = self.unit_of_work.i_user_repository.get(update.effective_user.id)
 
         try:
-            user = self.user_repository.get(update.effective_user.id)
+            user = self.unit_of_work.i_user_repository.get(update.effective_user.id)
         except NoResultFound:
             self.error_view.send_message(update.effective_chat.id, "You are not part of this ring!")
 
-        self.ring_repository.remove_user(ring, user)
+        self.unit_of_work.i_ring_repository.remove_user(ring, user)
         self.ring_view.message_sender.send_message("You left the ring!")
 
     def ring_detail_update(self, update, context: CallbackContext):
         json_data = json.loads(update.callback_query.data)
         ring_id = json_data['r']
         try:
-            ring = self.ring_repository.get(ring_id)
+            ring = self.unit_of_work.i_ring_repository.get(ring_id)
         except NoResultFound:
             self.error_view.ring_not_found(update.effective_chat.id)
             return
@@ -207,7 +208,7 @@ class RingController:
         # if ring_id is provided find ring with that ID
         if len(split_message) < 2:
             # no ring provided
-            ring = self.ring_repository.get_ring_by_chat_id(chat_id)
+            ring = self.unit_of_work.i_ring_repository.get_ring_by_chat_id(chat_id)
             if ring:
                 return ring
             else:
@@ -215,4 +216,4 @@ class RingController:
         # check if chat has a ring
         else:
             ring_id = int(split_message[1])
-            return self.ring_repository.get(ring_id)
+            return self.unit_of_work.i_ring_repository.get(ring_id)
