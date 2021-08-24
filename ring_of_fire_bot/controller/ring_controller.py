@@ -175,6 +175,7 @@ class RingController:
         ring = self.get_ring_and_handle_exceptions(update)
         if not ring:
             return
+        self.ring_view.send_ring_detail(update.effective_chat.id, ring)
 
     def get_ring_and_handle_exceptions(self, update: Update):
         chat_id: int = update.effective_chat.id
