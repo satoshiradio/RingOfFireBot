@@ -54,8 +54,8 @@ class RingView:
     def send_message(self, chat_id, text: str, keyboard: ReplyMarkup = None) -> None:
         self.message_sender.send_message(chat_id, text, keyboard)
 
-    def init_new_ring(self, chat_id: int):
-        self.message_sender.send_message(chat_id, self.init_text)
+    def init_new_ring(self, chat_id: int, ring: Ring):
+        self.message_sender.send_message(chat_id, f"{self.init_text} Ring id is {ring.ring_id}")
 
     def send_ring_detail(self, chat_id: int, ring: Ring):
         detail = detail_ring(ring)
@@ -81,10 +81,10 @@ class RingView:
         for status in RING_STATUS.list():
             # c = controller, f = function, r = ring_id, s = status
             # using chars because otherwise the data is to big, only 64 utf-8 bytes allowed
-            json_data = {'c':'r',
-                         'f':'s',
-                         'r':ring_id,
-                         's':str(status.name)
+            json_data = {'c': 'r',
+                         'f': 's',
+                         'r': ring_id,
+                         's': str(status.name)
                          }
 
             keyboard.append([InlineKeyboardButton(str(status.value),

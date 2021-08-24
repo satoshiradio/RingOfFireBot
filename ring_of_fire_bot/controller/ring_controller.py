@@ -61,7 +61,7 @@ class RingController:
         ring_name = split_text[1]
         ring = Ring(user, ring_name=ring_name)
         self.unit_of_work.ring_repository.add(ring)
-        self.ring_view.init_new_ring(chat_id)
+        self.ring_view.init_new_ring(chat_id, ring)
 
     def set_ring_status_command(self, update: Update, context: CallbackContext):
         chat_id = update.effective_chat.id
