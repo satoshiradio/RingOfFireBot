@@ -81,10 +81,10 @@ class RingView:
         for status in RING_STATUS.list():
             # c = controller, f = function, r = ring_id, s = status
             # using chars because otherwise the data is to big, only 64 utf-8 bytes allowed
-            json_data = {'c': 'r',
-                         'f': 's',
-                         'r': ring_id,
-                         's': str(status.name)
+            json_data = {'c':'r',
+                         'f':'s',
+                         'r':ring_id,
+                         's':str(status.name)
                          }
 
             keyboard.append([InlineKeyboardButton(str(status.value),
@@ -96,11 +96,12 @@ class RingView:
 
         for status in CHANNEL_STATUS.list():
             json_data = {'c': 'uir',
-                         'f': 'cs',
+                         'f': 'c',
                          'r': ring_id,
                          'u': user_id,
                          's': str(status.name)
                          }
+            print(json_data)
             keyboard.append([InlineKeyboardButton(str(status.value),
                                                   callback_data=json.dumps(json_data))])
         self.message_sender.send_message(chat_id, "Set channel status to:",

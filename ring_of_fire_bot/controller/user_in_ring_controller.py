@@ -26,7 +26,7 @@ class UserInRingController:
 
     def callbacks(self, update: Update, context: CallbackContext):
         callback_function = json.loads(update.callback_query.data)['f']
-        if callback_function == 'cs':
+        if callback_function == 'c':
             self.set_channel_status_callback(update, context)
             return
         if callback_function == 'f':
