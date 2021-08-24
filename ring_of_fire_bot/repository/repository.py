@@ -35,7 +35,7 @@ class Repository(IRepository[ModelType]):
         return query
 
     def get(self, entity_id, should_error=True) -> ModelType:
-        result = self._new_query().get(entity_id)
+        result = self.build().get(entity_id)
         if not result and should_error:
             raise NoResultFound("No result was found.")
         return result

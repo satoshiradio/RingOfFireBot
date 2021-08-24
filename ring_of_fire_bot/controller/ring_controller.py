@@ -29,6 +29,8 @@ class RingController:
                 CommandHandler("leave", self.leave_ring),
                 CommandHandler("ring_status", self.set_ring_status_command),  # manager
                 CommandHandler("set_chat", self.set_chat_id),  # manager
+                CommandHandler("set_size", self.set_size),
+                CommandHandler("set_amount_of_members", self.set_amount_of_members),
                 CommandHandler("remove_chat", self.remove_chat_id)  # manager
             ],
             states={},
@@ -129,18 +131,18 @@ class RingController:
 
     def join_ring(self, update: Update, context: CallbackContext):
         chat_id = update.effective_chat.id
-        ring = self.get_ring_and_handle_exceptions(update)
+        ring: Ring = self.get_ring_and_handle_exceptions(update)
         if not ring:
             return
         try:
-            user = self.unit_of_work.ring_repository.get(update.effective_user.id)
+            user = self.unit_of_work.user_repository.get(update.effective_user.id)
         except NoResultFound:
             self.error_view.not_registered(chat_id)
             return
         if ring.is_user_member(user):
             self.error_view.send_message(chat_id, "Already in this group")
             return
-        ring.add_member(user)
+        ring.add_user(user)
         self.unit_of_work.complete()
         self.ring_view.message_sender.send_message(chat_id, "Welcome to the ring!")
 
@@ -187,3 +189,49 @@ class RingController:
         except InvalidNodeKeyException:
             self.error_view.ring_id_not_provided(chat_id)
             return
+
+    def set_size(self, update: Update, context: CallbackContext):
+        split_message = update.message.text.split(' ', 2)
+        try:
+            ring_id = int(split_message[1])
+            print(ring_id)
+            ring = self.unit_of_work.ring_repository.get(ring_id)
+        except NoResultFound:
+            self.error_view.ring_not_found(update.effective_chat.id)
+            return
+        except InvalidNodeKeyException:
+            self.error_view.ring_id_not_provided(update.effective_chat.id)
+            return
+
+        if not ring.is_manager(update.effective_user.id):
+            self.error_view.not_manager(update.effective_chat.id)
+            return
+        ring.set_channel_size(int(split_message[2]))
+        self.unit_of_work.complete()
+        message = f"Ring size set to {ring.channel_size}!"
+        if ring.channel_size > 9000:
+            message = f"{message} It's over 9000!"
+        self.ring_view.message_sender.send_message(update.effective_chat.id, message)
+
+    def set_amount_of_members(self, update: Update, context: CallbackContext):
+        split_message = update.message.text.split(' ', 2)
+        try:
+            ring_id = int(split_message[1])
+            print(ring_id)
+            ring = self.unit_of_work.ring_repository.get(ring_id)
+        except NoResultFound:
+            self.error_view.ring_not_found(update.effective_chat.id)
+            return
+        except InvalidNodeKeyException:
+            self.error_view.ring_id_not_provided(update.effective_chat.id)
+            return
+
+        if not ring.is_manager(update.effective_user.id):
+            self.error_view.not_manager(update.effective_chat.id)
+            return
+        ring.set_max_ring_members(int(split_message[2]))
+        self.unit_of_work.complete()
+        message = f"Amount of Ring members is set to {ring.max_ring_members}!"
+        if ring.max_ring_members > 26:
+            message = f"{message} More than 26 members is discouraged because of a 27 hop limit in LND"
+        self.ring_view.message_sender.send_message(update.effective_chat.id, message)
