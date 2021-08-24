@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, ForeignKey, Enum, BigInteger
 from sqlalchemy.orm import relationship
 
 from ring_of_fire_bot.model.database import Base
@@ -16,7 +16,7 @@ class Ring(Base):
     ring_manager = relationship("User")
     users = relationship("UserInRing", back_populates="ring", cascade="all, delete, delete-orphan")
     max_ring_members = Column(Integer, default=26)
-    chat_id = Column(Integer, unique=True)
+    chat_id = Column(BigInteger, unique=True)
     channel_size = Column(Integer, default=1000000)
 
     def __init__(self, ring_manager: User, channel_size=1000000, max_ring_members=26, ring_name="",
