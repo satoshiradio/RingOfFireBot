@@ -2,6 +2,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Enum, BigInteger
 from sqlalchemy.orm import relationship
 
 from ring_of_fire_bot.model.database import Base
+
 from ring_of_fire_bot.model.ring_status import RING_STATUS
 from ring_of_fire_bot.model.user import User
 from ring_of_fire_bot.model.user_in_ring import UserInRing
