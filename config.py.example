@@ -1,0 +1,11 @@
+class BotConfig:
+    TOKEN = "1946537920:AAEWDVH11M45FUOZGlpnuII2PcYbpPoBTnA"
+
+
+class DbConfig:
+    SQLALCHEMY_DATABASE_URI = 'mariadb+mariadbconnector://username:password@host:3306/databaseName'
+
+
+class LogConfig:
+    ENABLE_TELEGRAM_LOGGING: True
+    LOG_CHAT_ID = 1234567
